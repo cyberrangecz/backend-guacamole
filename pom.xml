@@ -24,17 +24,31 @@
         </repository>
     </repositories>
 
-    <url/>
+    <url>github.com/cyberrangecz/backend-guacamole</url>
+    <scm>
+        <url>github.com/cyberrangecz/backend-guacamole</url>
+        <connection>scm:git:github.com/cyberrangecz/backend-guacamole.git</connection>
+        <developerConnection>scm:git:git@github.com:cyberrangecz/backend-guacamole.git</developerConnection>
+        <tag>HEAD</tag>
+    </scm>
+
+    <developers>
+        <developer>
+            <name>Mário Murín</name>
+            <email>murin@cshub.cz</email>
+        </developer>
+    </developers>
+
     <licenses>
         <license>
             <name>MIT</name>
-            <url>https://opensource.org/license/mit/</url>
-            <distribution>repo</distribution>
+            <url>https://github.com/cyberrangecz/backend-guacamole/blob/master/LICENSE</url>
         </license>
     </licenses>
 
     <properties>
         <java.version>21</java.version>
+        <crczp-security-commons.version>1.0.1</crczp-security-commons.version>
     </properties>
     <dependencies>
         <dependency>
@@ -62,9 +76,9 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>cz.cyberrange.platform</groupId>
-            <artifactId>security-commons</artifactId>
-            <version>1.0.0</version>
+            <groupId>cz.cybersecurityhub.maven</groupId>
+            <artifactId>crczp-security-commons</artifactId>
+            <version>${crczp-security-commons.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.guacamole</groupId>
