@@ -17,10 +17,11 @@ on:
 jobs:
   # This will create docker image as well
   java_template:
-    uses: cyberrangecz/actions-templates/.github/workflows/java_template.yml@master
+    uses: cyberrangecz/actions-templates/.github/workflows/java_template.yml@feat/set-java-version
     secrets:
       NVD_API: ${{ secrets.NVD_API }}
     with:
+      JAVA_VERSION: "21"
       MAVEN_CLI_OPTS: ""
       IMAGE_NAME: "guacamole-service"
       VERSION_PATH: "pom.xml"
