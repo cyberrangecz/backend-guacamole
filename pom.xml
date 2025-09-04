@@ -12,10 +12,11 @@
 
     <groupId>cz.cyberrange.platform</groupId>
     <artifactId>guacamole-service</artifactId>
-    <version>0.0.1</version>
+    <version>0.0.2</version>
 
     <name>guacamole-service</name>
-    <description>This service allows the creation of websockets to Guacd and provides additional QoL features</description>
+    <description>This service allows the creation of websockets to Guacd and provides additional QoL features
+    </description>
 
     <url>github.com/cyberrangecz/backend-guacamole</url>
     <scm>
@@ -117,93 +118,93 @@
                 <artifactId>spotless-maven-plugin</artifactId>
                 <version>2.46.1</version>
                 <configuration>
-                <skip>${skipChecks}</skip>
-                <java>
-                    <googleJavaFormat />
-                </java>
+                    <skip>${skipChecks}</skip>
+                    <java>
+                        <googleJavaFormat/>
+                    </java>
                 </configuration>
                 <executions>
-                <execution>
-                    <id>spotless-check</id>
-                    <phase>validate</phase>
-                    <goals>
-                    <goal>apply</goal>
-                    </goals>
-                </execution>
+                    <execution>
+                        <id>spotless-check</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>apply</goal>
+                        </goals>
+                    </execution>
                 </executions>
             </plugin>
 
             <!-- Surefire: unit tests -->
             <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-surefire-plugin</artifactId>
-            <version>3.5.3</version>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.5.3</version>
             </plugin>
 
             <!-- Checkstyle: style & lint rules -->
             <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-checkstyle-plugin</artifactId>
-            <version>3.6.0</version>
-            <configuration>
-                <skip>${skipChecks}</skip>
-                <configLocation>google_checks.xml</configLocation>
-                <failsOnError>false</failsOnError>
-                <consoleOutput>true</consoleOutput>
-            </configuration>
-            <executions>
-                <execution>
-                <id>checkstyle</id>
-                <phase>verify</phase>
-                <goals>
-                    <goal>check</goal>
-                </goals>
-                </execution>
-            </executions>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>3.6.0</version>
+                <configuration>
+                    <skip>${skipChecks}</skip>
+                    <configLocation>google_checks.xml</configLocation>
+                    <failsOnError>false</failsOnError>
+                    <consoleOutput>true</consoleOutput>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>checkstyle</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
 
             <!-- SpotBugs -->
             <plugin>
-            <groupId>com.github.spotbugs</groupId>
-            <artifactId>spotbugs-maven-plugin</artifactId>
-            <version>4.9.4.0</version>
-            <configuration>
-                <skip>${skipChecks}</skip>
-                <effort>Max</effort>
-                <threshold>Low</threshold>
-                <failOnError>false</failOnError>
-            </configuration>
-            <executions>
-                <execution>
-                <id>spotbugs</id>
-                <phase>verify</phase>
-                <goals>
-                    <goal>check</goal>
-                </goals>
-                </execution>
-            </executions>
+                <groupId>com.github.spotbugs</groupId>
+                <artifactId>spotbugs-maven-plugin</artifactId>
+                <version>4.9.4.0</version>
+                <configuration>
+                    <skip>${skipChecks}</skip>
+                    <effort>Max</effort>
+                    <threshold>Low</threshold>
+                    <failOnError>false</failOnError>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>spotbugs</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
 
             <!-- OWASP Dependency-Check -->
             <plugin>
-            <groupId>org.owasp</groupId>
-            <artifactId>dependency-check-maven</artifactId>
-            <version>12.1.3</version>
-            <configuration>
-                <skip>${skipChecks}</skip>
-                <!-- later need to set score -->
-                <failBuildOnCVSS>11</failBuildOnCVSS>
-                <nvdApiKey>${env.NVD_API_TOKEN}</nvdApiKey>
-            </configuration>
-            <executions>
-                <execution>
-                <id>dependency-check</id>
-                <phase>verify</phase>
-                <goals>
-                    <goal>check</goal>
-                </goals>
-                </execution>
-            </executions>
+                <groupId>org.owasp</groupId>
+                <artifactId>dependency-check-maven</artifactId>
+                <version>12.1.3</version>
+                <configuration>
+                    <skip>${skipChecks}</skip>
+                    <!-- later need to set score -->
+                    <failBuildOnCVSS>11</failBuildOnCVSS>
+                    <nvdApiKey>${env.NVD_API_TOKEN}</nvdApiKey>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>dependency-check</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

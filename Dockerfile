@@ -23,9 +23,9 @@ ARG PROJECT_ARTIFACT_ID
 
 ENV PROJECT_ARTIFACT_ID=${PROJECT_ARTIFACT_ID}
 
-COPY etc/$PROJECT_ARTIFACT_ID.properties /app/etc/$PROJECT_ARTIFACT_ID.properties
+COPY etc/guacamole-service.properties /app/etc/guacamole-service.properties
 COPY entrypoint.sh /app/entrypoint.sh
-COPY --from=build /app/$PROJECT_ARTIFACT_ID.jar ./
+COPY --from=build /app/guacamole-service.jar ./
 
 RUN apt-get update && \
     # Required to use nc command in the wait for it function, see entrypoint.sh
