@@ -23,5 +23,5 @@ jobs:
     with:
       JAVA_VERSION: "21"
       MAVEN_CLI_OPTS: ""
-      IMAGE_NAME: "guacamole-service"
+      IMAGE_NAME: "guacamole"
       VERSION_PATH: "pom.xml"

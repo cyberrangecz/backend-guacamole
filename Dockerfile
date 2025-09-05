@@ -1,11 +1,11 @@
-ARG PROJECT_ARTIFACT_ID=guacamole
+ARG PROJECT_ARTIFACT_ID=guacamole-service
 
 ############ BUILD STAGE ############
 FROM maven:3.9.4-eclipse-temurin-21-alpine AS build
 WORKDIR /app
 
 ARG PROJECT_ARTIFACT_ID
-# EXTRA OPTIONS
+# Extra options
 ARG MAVEN_CLI_OPTS=""
 
 COPY pom.xml /app/pom.xml
@@ -13,7 +13,7 @@ COPY src /app/src
 
 # Build JAR file
 RUN mvn -ntp clean install -DskipTests -DskipChecks=true $MAVEN_CLI_OPTS && \
-    cp /app/target/guacamole-service-*.jar /app/$PROJECT_ARTIFACT_ID.jar
+    cp /app/target/$PROJECT_ARTIFACT_ID-*.jar /app/$PROJECT_ARTIFACT_ID.jar
 
 ############ RUNNABLE STAGE ############
 FROM eclipse-temurin:21-jre-noble AS runnable
@@ -24,7 +24,7 @@ ARG PROJECT_ARTIFACT_ID
 
 ENV PROJECT_ARTIFACT_ID=${PROJECT_ARTIFACT_ID}
 
-COPY etc/guacamole-service.properties /app/etc/$PROJECT_ARTIFACT_ID.properties
+COPY etc/$PROJECT_ARTIFACT_ID.properties /app/etc/$PROJECT_ARTIFACT_ID.properties
 COPY entrypoint.sh /app/entrypoint.sh
 COPY --from=build /app/$PROJECT_ARTIFACT_ID.jar ./
 
