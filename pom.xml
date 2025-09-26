@@ -6,7 +6,7 @@
 
     <groupId>cz.cyberrange.platform</groupId>
     <artifactId>guacamole-service</artifactId>
-    <version>0.0.3</version>
+    <version>0.0.4</version>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
@@ -261,26 +261,27 @@
             </plugin>
 
             <!-- OWASP Dependency-Check -->
-            <!-- Disabled until pipeline cache solution is provided -->
-            <!--            <plugin>-->
-            <!--                <groupId>org.owasp</groupId>-->
-            <!--                <artifactId>dependency-check-maven</artifactId>-->
-            <!--                <version>12.1.3</version>-->
-            <!--                <configuration>-->
-            <!--                    <skip>${skipChecks}</skip>-->
-            <!--                    <failBuildOnCVSS>4</failBuildOnCVSS>-->
-            <!--                    <nvdApiKey>${env.NVD_API_TOKEN}</nvdApiKey>-->
-            <!--                </configuration>-->
-            <!--                <executions>-->
-            <!--                    <execution>-->
-            <!--                        <id>dependency-check</id>-->
-            <!--                        <phase>verify</phase>-->
-            <!--                        <goals>-->
-            <!--                            <goal>check</goal>-->
-            <!--                        </goals>-->
-            <!--                    </execution>-->
-            <!--                </executions>-->
-            <!--            </plugin>-->
+            <plugin>
+                <groupId>org.owasp</groupId>
+                <artifactId>dependency-check-maven</artifactId>
+                <version>12.1.3</version>
+                <configuration>
+                    <skip>${skipChecks}</skip>
+                    <failBuildOnCVSS>4</failBuildOnCVSS>
+                    <nvdApiKey>${env.NVD_API_TOKEN}</nvdApiKey>
+                    <dataDirectory>${env.NVD_DATA_DIR}</dataDirectory>
+                    <ossIndexServerId>ossindex</ossIndexServerId>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>dependency-check</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
