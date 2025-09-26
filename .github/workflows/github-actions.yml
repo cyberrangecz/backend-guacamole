@@ -20,6 +20,8 @@ jobs:
     uses: cyberrangecz/actions-templates/.github/workflows/java_template.yml@master
     secrets:
       NVD_API: ${{ secrets.NVD_API }}
+      OSS_INDEX_USER: ${{ secrets.OSS_INDEX_USER }}
+      OSS_INDEX_TOKEN: ${{ secrets.OSS_INDEX_TOKEN }}
     with:
       JAVA_VERSION: "21"
       MAVEN_CLI_OPTS: ""
