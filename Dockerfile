@@ -10,9 +10,10 @@ ARG MAVEN_CLI_OPTS=""
 
 COPY pom.xml /app/pom.xml
 COPY src /app/src
+COPY .m2 /app/.m2
 
 # Build JAR file
-RUN mvn -ntp clean install -DskipTests -DskipChecks=true $MAVEN_CLI_OPTS && \
+RUN mvn clean install -DskipTests -DskipChecks=true $MAVEN_CLI_OPTS -Dmaven.repo.local=/app/.m2/repository && \
     cp /app/target/$PROJECT_ARTIFACT_ID-*.jar /app/$PROJECT_ARTIFACT_ID.jar
 
 ############ RUNNABLE STAGE ############

@@ -11,6 +11,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.codec.json.Jackson2JsonDecoder;
+import org.springframework.http.codec.json.Jackson2JsonEncoder;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
@@ -28,7 +30,7 @@ public class WebClientConfiguration {
   private final ObjectMapper objectMapper;
 
   @Value("${sandbox-service.uri}")
-  private String openStackURI;
+  private String sandboxServiceUri;
 
   @Value("${user-and-group-server.uri}")
   private String userAndGroupURI;
@@ -48,11 +50,22 @@ public class WebClientConfiguration {
   @Bean
   public WebClient sandboxServiceWebClient() {
     return WebClient.builder()
-        .baseUrl(openStackURI)
+        .baseUrl(sandboxServiceUri)
         .defaultHeaders(
             headers -> {
               headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
               headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+            })
+        .codecs(
+            configurer -> {
+              configurer
+                  .defaultCodecs()
+                  .jackson2JsonEncoder(
+                      new Jackson2JsonEncoder(objectMapper, MediaType.APPLICATION_JSON));
+              configurer
+                  .defaultCodecs()
+                  .jackson2JsonDecoder(
+                      new Jackson2JsonDecoder(objectMapper, MediaType.APPLICATION_JSON));
             })
         .filters(
             exchangeFilterFunctions -> {

@@ -16,7 +16,7 @@ import lombok.ToString;
     name = "UserRefDTO",
     description =
         "User information from user-and-group microservice is mapped to this class and is also used to provide information about authors, participants, and organizers.")
-public class UserRefDTO {
+public class UserRefDto {
 
   @JsonAlias({"id", "user_ref_id"})
   @Schema(description = "Reference to user in another microservice and get his id", example = "1")

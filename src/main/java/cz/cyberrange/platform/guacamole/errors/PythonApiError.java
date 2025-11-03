@@ -9,7 +9,7 @@ import lombok.Getter;
 @Getter
 @Schema(
     name = "PythonApiError",
-    description = "A detailed error from another Python mircorservice.",
+    description = "A detailed error from another Python microservice.",
     allOf = {ApiSubError.class})
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PythonApiError extends ApiSubError {
