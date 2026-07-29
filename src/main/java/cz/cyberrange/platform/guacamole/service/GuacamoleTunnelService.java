@@ -119,6 +119,12 @@ public class GuacamoleTunnelService {
 
     this.applyProtocolOverrides(config, protocolType);
 
-    return new SimpleGuacamoleTunnel(socket);
+    GuacamoleSocket guacdSocket = new InetGuacamoleSocket(data.getManIp(), data.getManPort());
+    try {
+      return new SimpleGuacamoleTunnel(new ConfiguredGuacamoleSocket(guacdSocket, config));
+    } catch (GuacamoleException | RuntimeException handshakeFailure) {
+      closeAndSuppressFailure(guacdSocket, handshakeFailure);
+      throw handshakeFailure;
+    }
   }
 }
