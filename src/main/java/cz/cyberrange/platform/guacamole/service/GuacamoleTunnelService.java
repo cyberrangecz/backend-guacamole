@@ -1,5 +1,7 @@
 package cz.cyberrange.platform.guacamole.service;
 
+import cz.cyberrange.platform.guacamole.config.GuacamoleProtocolOverrides;
+import cz.cyberrange.platform.guacamole.model.GuacamoleProtocol;
 import cz.cyberrange.platform.guacamole.model.dto.ProtocolDto;
 import cz.cyberrange.platform.guacamole.model.dto.VmConnectionDataDto;
 import java.util.Collection;
@@ -23,15 +25,19 @@ import org.springframework.stereotype.Service;
 public class GuacamoleTunnelService {
 
   private final SandboxCommunicationService sandboxCommunicationService;
+  private final GuacamoleProtocolOverrides protocolOverrides;
 
   /**
    * Instantiates a new Guacamole service.
    *
    * @param sandboxService service for API calls to sandbox microservice
+   * @param protocolOverrides holder of user-defined per-protocol connection parameter overrides
    */
   @Autowired
-  public GuacamoleTunnelService(SandboxCommunicationService sandboxService) {
+  public GuacamoleTunnelService(
+      SandboxCommunicationService sandboxService, GuacamoleProtocolOverrides protocolOverrides) {
     this.sandboxCommunicationService = sandboxService;
+    this.protocolOverrides = protocolOverrides;
   }
 
   private static Optional<ProtocolDto> findProtocol(
@@ -41,7 +47,7 @@ public class GuacamoleTunnelService {
       return Optional.empty();
     }
     return protocols.stream()
-        .filter(protocol -> isGui != "SSH".equalsIgnoreCase(protocol.getName()))
+        .filter(protocol -> protocol.getName() != null && protocol.getName().isGraphical() == isGui)
         .peek(protocol -> log.info("Found protocol {}", protocol.getName()))
         .findFirst();
   }
@@ -55,6 +61,18 @@ public class GuacamoleTunnelService {
       config.setParameter("height", String.valueOf(height));
     }
     config.setParameter("resize-method", "display-update");
+  }
+
+  private static void closeAndSuppressFailure(GuacamoleSocket socket, Throwable primaryFailure) {
+    try {
+      socket.close();
+    } catch (GuacamoleException | RuntimeException closeFailure) {
+      primaryFailure.addSuppressed(closeFailure);
+    }
+  }
+
+  private void applyProtocolOverrides(GuacamoleConfiguration config, GuacamoleProtocol protocol) {
+    this.protocolOverrides.forProtocol(protocol).forEach(config::setParameter);
   }
 
   /**
@@ -87,20 +105,19 @@ public class GuacamoleTunnelService {
               .formatted(isGui ? "with GUI" : "without GUI", nodeName));
     }
 
-    String protocolName = protocol.get().getName().toLowerCase();
+    ProtocolDto selectedProtocol = protocol.get();
+    GuacamoleProtocol protocolType = selectedProtocol.getName();
 
     GuacamoleConfiguration config = new GuacamoleConfiguration();
-    config.setProtocol(protocolName);
+    config.setProtocol(protocolType.getProtocolName());
     config.setParameter("hostname", data.getHostIp());
-    config.setParameter("port", protocol.get().getPort().toString());
+    config.setParameter("port", selectedProtocol.getPort().toString());
 
-    if (protocolName.equalsIgnoreCase("rdp")) {
+    if (protocolType == GuacamoleProtocol.RDP) {
       configureRdpOptions(config, width, height);
     }
 
-    GuacamoleSocket socket =
-        new ConfiguredGuacamoleSocket(
-            new InetGuacamoleSocket(data.getManIp(), data.getManPort()), config);
+    this.applyProtocolOverrides(config, protocolType);
 
     return new SimpleGuacamoleTunnel(socket);
   }
