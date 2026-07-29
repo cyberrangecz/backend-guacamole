@@ -58,6 +58,7 @@ public class GuacamoleProtocolOverrides {
             .putIfAbsent(parameter, String.valueOf(enumerable.getProperty(key)));
       }
     }
+    parsed.replaceAll((protocol, parameters) -> Map.copyOf(parameters));
     return parsed;
   }
 

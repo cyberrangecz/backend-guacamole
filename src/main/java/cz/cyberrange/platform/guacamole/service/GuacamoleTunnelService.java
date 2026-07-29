@@ -15,7 +15,6 @@ import org.apache.guacamole.net.InetGuacamoleSocket;
 import org.apache.guacamole.net.SimpleGuacamoleTunnel;
 import org.apache.guacamole.protocol.ConfiguredGuacamoleSocket;
 import org.apache.guacamole.protocol.GuacamoleConfiguration;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
@@ -34,7 +33,6 @@ public class GuacamoleTunnelService {
    * @param sandboxService service for API calls to sandbox microservice
    * @param protocolOverrides holder of user-defined per-protocol connection parameter overrides
    */
-  @Autowired
   public GuacamoleTunnelService(
       SandboxCommunicationService sandboxService, GuacamoleProtocolOverrides protocolOverrides) {
     this.sandboxCommunicationService = sandboxService;
@@ -47,10 +45,13 @@ public class GuacamoleTunnelService {
       log.warn("No protocols available");
       return Optional.empty();
     }
-    return protocols.stream()
-        .filter(protocol -> protocol.getName() != null && protocol.getName().isGraphical() == isGui)
-        .peek(protocol -> log.info("Found protocol {}", protocol.getName()))
-        .findFirst();
+    Optional<ProtocolDto> selected =
+        protocols.stream()
+            .filter(
+                protocol -> protocol.getName() != null && protocol.getName().isGraphical() == isGui)
+            .findFirst();
+    selected.ifPresent(protocol -> log.info("Found protocol {}", protocol.getName()));
+    return selected;
   }
 
   private static void configureRdpOptions(
