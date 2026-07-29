@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.guacamole.GuacamoleException;
+import org.apache.guacamole.GuacamoleResourceNotFoundException;
 import org.apache.guacamole.net.GuacamoleSocket;
 import org.apache.guacamole.net.GuacamoleTunnel;
 import org.apache.guacamole.net.InetGuacamoleSocket;
@@ -84,8 +85,7 @@ public class GuacamoleTunnelService {
    * @param width what display width to apply (only for compatible protocols)
    * @param height what display height to apply (only for compatible protocols)
    * @return GuacamoleTunnel
-   * @throws GuacamoleException on failure to create tunnel
-   * @throws IllegalStateException when no suitable protocol is found
+   * @throws GuacamoleException on failure to create tunnel, or when no suitable protocol is found
    */
   public GuacamoleTunnel createGuacamoleTunnel(
       @NonNull String sandboxId,
@@ -100,7 +100,7 @@ public class GuacamoleTunnelService {
     Optional<ProtocolDto> protocol = findProtocol(data.getProtocols(), isGui);
 
     if (protocol.isEmpty()) {
-      throw new IllegalStateException(
+      throw new GuacamoleResourceNotFoundException(
           "No protocol %s found for node '%s'"
               .formatted(isGui ? "with GUI" : "without GUI", nodeName));
     }
