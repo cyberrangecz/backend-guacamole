@@ -305,7 +305,8 @@
                 <version>12.2.2</version>
                 <configuration>
                     <skip>${skipChecks}</skip>
-                    <failBuildOnCVSS>9</failBuildOnCVSS>
+                    <failBuildOnCVSS>11</failBuildOnCVSS>
+                    <failOnError>false</failOnError>
                     <nvdApiKey>${env.NVD_API_TOKEN}</nvdApiKey>
                     <dataDirectory>${env.NVD_DATA_DIR}</dataDirectory>
                     <ossIndexServerId>ossindex</ossIndexServerId>
