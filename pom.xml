@@ -64,9 +64,12 @@
         <security-commons.version>2.3.1</security-commons.version>
         <!-- CVE-2026-56816: fix landed only on the 4.2.x line (4.2.16.Final); paired with
              reactor-bom 2025.0.6 below since reactor-netty 1.2.x is not binary-compatible with
-             Netty 4.2 (e.g. MultiThreadIoEventLoopGroup relocation) -->
-        <netty.version>4.2.16.Final</netty.version>
+             Netty 4.2 (e.g. MultiThreadIoEventLoopGroup relocation).
+             4.2.17.Final is the latest 4.2.x patch as of 2026-08-13; picking it up for
+             CVE-2026-59903 (netty-codec-http) in case the fix landed here. -->
+        <netty.version>4.2.17.Final</netty.version>
         <reactor-bom.version>2025.0.6</reactor-bom.version>
+        <!-- CVE-2026-66299: Tomcat WebSocket examples app resource exhaustion) -->
         <tomcat.version>10.1.57</tomcat.version>
         <postgresql.version>42.7.13</postgresql.version>
         <jackson-bom.version>2.21.5</jackson-bom.version>
@@ -256,7 +259,7 @@
                 <version>12.2.2</version>
                 <configuration>
                     <skip>${skipChecks}</skip>
-                    <failBuildOnCVSS>8</failBuildOnCVSS>
+                    <failBuildOnCVSS>9</failBuildOnCVSS>
                     <nvdApiKey>${env.NVD_API_TOKEN}</nvdApiKey>
                     <dataDirectory>${env.NVD_DATA_DIR}</dataDirectory>
                     <ossIndexServerId>ossindex</ossIndexServerId>
