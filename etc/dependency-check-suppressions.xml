@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+    <suppress>
+        <notes><![CDATA[
+        False positive: CVE-2026-47838 affects spring-security-web 6.5.0-6.5.10 and was fixed in 6.5.11,
+        per Spring's own advisory (https://spring.io/security/cve-2026-47838/). We are already on 6.5.11
+        (via spring-boot-starter-parent), but Dependency-Check's CPE match incorrectly flags the patched
+        version itself as vulnerable. Tracked upstream at
+        https://github.com/dependency-check/DependencyCheck/issues/8614
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.springframework\.security/spring\-security\-web@.*$</packageUrl>
+        <cve>CVE-2026-47838</cve>
+    </suppress>
+</suppressions>

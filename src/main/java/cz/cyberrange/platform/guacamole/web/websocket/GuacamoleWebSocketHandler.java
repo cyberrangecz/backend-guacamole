@@ -243,6 +243,11 @@ public class GuacamoleWebSocketHandler extends TextWebSocketHandler implements S
       log.debug("Error connecting WebSocket tunnel.", e);
       sessionLocks.remove(session.getId());
       closeConnection(session, e.getStatus());
+    } catch (RuntimeException e) {
+      log.error("Creation of WebSocket tunnel to guacd failed unexpectedly: {}", e.getMessage());
+      log.debug("Unexpected error connecting WebSocket tunnel.", e);
+      sessionLocks.remove(session.getId());
+      closeConnection(session, GuacamoleStatus.SERVER_ERROR);
     }
   }
 

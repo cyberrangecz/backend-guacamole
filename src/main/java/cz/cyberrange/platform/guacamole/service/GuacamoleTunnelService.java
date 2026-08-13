@@ -1,18 +1,20 @@
 package cz.cyberrange.platform.guacamole.service;
 
+import cz.cyberrange.platform.guacamole.config.GuacamoleProtocolOverrides;
+import cz.cyberrange.platform.guacamole.model.GuacamoleProtocol;
 import cz.cyberrange.platform.guacamole.model.dto.ProtocolDto;
 import cz.cyberrange.platform.guacamole.model.dto.VmConnectionDataDto;
 import java.util.Collection;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.guacamole.GuacamoleException;
+import org.apache.guacamole.GuacamoleResourceNotFoundException;
 import org.apache.guacamole.net.GuacamoleSocket;
 import org.apache.guacamole.net.GuacamoleTunnel;
 import org.apache.guacamole.net.InetGuacamoleSocket;
 import org.apache.guacamole.net.SimpleGuacamoleTunnel;
 import org.apache.guacamole.protocol.ConfiguredGuacamoleSocket;
 import org.apache.guacamole.protocol.GuacamoleConfiguration;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
@@ -23,15 +25,18 @@ import org.springframework.stereotype.Service;
 public class GuacamoleTunnelService {
 
   private final SandboxCommunicationService sandboxCommunicationService;
+  private final GuacamoleProtocolOverrides protocolOverrides;
 
   /**
    * Instantiates a new Guacamole service.
    *
    * @param sandboxService service for API calls to sandbox microservice
+   * @param protocolOverrides holder of user-defined per-protocol connection parameter overrides
    */
-  @Autowired
-  public GuacamoleTunnelService(SandboxCommunicationService sandboxService) {
+  public GuacamoleTunnelService(
+      SandboxCommunicationService sandboxService, GuacamoleProtocolOverrides protocolOverrides) {
     this.sandboxCommunicationService = sandboxService;
+    this.protocolOverrides = protocolOverrides;
   }
 
   private static Optional<ProtocolDto> findProtocol(
@@ -40,10 +45,13 @@ public class GuacamoleTunnelService {
       log.warn("No protocols available");
       return Optional.empty();
     }
-    return protocols.stream()
-        .filter(protocol -> isGui != "SSH".equalsIgnoreCase(protocol.getName()))
-        .peek(protocol -> log.info("Found protocol {}", protocol.getName()))
-        .findFirst();
+    Optional<ProtocolDto> selected =
+        protocols.stream()
+            .filter(
+                protocol -> protocol.getName() != null && protocol.getName().isGraphical() == isGui)
+            .findFirst();
+    selected.ifPresent(protocol -> log.info("Found protocol {}", protocol.getName()));
+    return selected;
   }
 
   private static void configureRdpOptions(
@@ -57,6 +65,18 @@ public class GuacamoleTunnelService {
     config.setParameter("resize-method", "display-update");
   }
 
+  private static void closeAndSuppressFailure(GuacamoleSocket socket, Throwable primaryFailure) {
+    try {
+      socket.close();
+    } catch (GuacamoleException | RuntimeException closeFailure) {
+      primaryFailure.addSuppressed(closeFailure);
+    }
+  }
+
+  private void applyProtocolOverrides(GuacamoleConfiguration config, GuacamoleProtocol protocol) {
+    this.protocolOverrides.forProtocol(protocol).forEach(config::setParameter);
+  }
+
   /**
    * Creates a GuacamoleTunnel for the specified sandbox and node.
    *
@@ -66,8 +86,7 @@ public class GuacamoleTunnelService {
    * @param width what display width to apply (only for compatible protocols)
    * @param height what display height to apply (only for compatible protocols)
    * @return GuacamoleTunnel
-   * @throws GuacamoleException on failure to create tunnel
-   * @throws IllegalStateException when no suitable protocol is found
+   * @throws GuacamoleException on failure to create tunnel, or when no suitable protocol is found
    */
   public GuacamoleTunnel createGuacamoleTunnel(
       @NonNull String sandboxId,
@@ -82,26 +101,31 @@ public class GuacamoleTunnelService {
     Optional<ProtocolDto> protocol = findProtocol(data.getProtocols(), isGui);
 
     if (protocol.isEmpty()) {
-      throw new IllegalStateException(
+      throw new GuacamoleResourceNotFoundException(
           "No protocol %s found for node '%s'"
               .formatted(isGui ? "with GUI" : "without GUI", nodeName));
     }
 
-    String protocolName = protocol.get().getName().toLowerCase();
+    ProtocolDto selectedProtocol = protocol.get();
+    GuacamoleProtocol protocolType = selectedProtocol.getName();
 
     GuacamoleConfiguration config = new GuacamoleConfiguration();
-    config.setProtocol(protocolName);
+    config.setProtocol(protocolType.getProtocolName());
     config.setParameter("hostname", data.getHostIp());
-    config.setParameter("port", protocol.get().getPort().toString());
+    config.setParameter("port", selectedProtocol.getPort().toString());
 
-    if (protocolName.equalsIgnoreCase("rdp")) {
+    if (protocolType == GuacamoleProtocol.RDP) {
       configureRdpOptions(config, width, height);
     }
 
-    GuacamoleSocket socket =
-        new ConfiguredGuacamoleSocket(
-            new InetGuacamoleSocket(data.getManIp(), data.getManPort()), config);
+    this.applyProtocolOverrides(config, protocolType);
 
-    return new SimpleGuacamoleTunnel(socket);
+    GuacamoleSocket guacdSocket = new InetGuacamoleSocket(data.getManIp(), data.getManPort());
+    try {
+      return new SimpleGuacamoleTunnel(new ConfiguredGuacamoleSocket(guacdSocket, config));
+    } catch (GuacamoleException | RuntimeException handshakeFailure) {
+      closeAndSuppressFailure(guacdSocket, handshakeFailure);
+      throw handshakeFailure;
+    }
   }
 }
