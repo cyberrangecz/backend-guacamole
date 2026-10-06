@@ -1,40 +1,34 @@
 package cz.cyberrange.platform.guacamole.config;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.PropertyNamingStrategies;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import org.springframework.boot.jackson.autoconfigure.JsonMapperBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.MapperFeature;
+import tools.jackson.databind.PropertyNamingStrategies;
+import tools.jackson.databind.SerializationFeature;
+import tools.jackson.databind.cfg.EnumFeature;
 
-/**
- * Configuration of Object Mapper. Serializing objects to JSON with indent output, serialize dates
- * to one field and use SNAKE_CASE notation instead of camelCase for JSON.
- */
+/** Configures the auto-configured JSON mapper. */
 @Configuration
 public class ObjectMapperConfiguration {
 
+  /**
+   * Names JSON properties in snake_case, reads and writes enums by their constant name, keeps
+   * properties in declaration order, indents written JSON, and rejects JSON carrying properties the
+   * target type does not declare.
+   *
+   * @return the customizer applied to the auto-configured JSON mapper
+   */
   @Bean
-  @Primary
-  public ObjectMapper objectMapper() {
-    ObjectMapper objectMapper = new ObjectMapper();
-    objectMapper.setPropertyNamingStrategy(new PropertyNamingStrategies.SnakeCaseStrategy());
-    objectMapper.registerModule(new JavaTimeModule());
-    objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-    objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
-    return objectMapper;
-  }
-
-  @Bean(name = "yamlObjectMapper")
-  public ObjectMapper yamlObjectMapper() {
-    ObjectMapper yamlObjectMapper = new ObjectMapper(new YAMLFactory());
-    yamlObjectMapper.findAndRegisterModules();
-    yamlObjectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-    yamlObjectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-    yamlObjectMapper.enable(SerializationFeature.INDENT_OUTPUT);
-    return yamlObjectMapper;
+  public JsonMapperBuilderCustomizer snakeCaseJsonMapperCustomizer() {
+    return builder ->
+        builder
+            .propertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
+            .disable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
+            .disable(EnumFeature.READ_ENUMS_USING_TO_STRING)
+            .disable(EnumFeature.WRITE_ENUMS_USING_TO_STRING)
+            .enable(SerializationFeature.INDENT_OUTPUT)
+            .enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
   }
 }

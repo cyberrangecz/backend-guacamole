@@ -1,18 +1,16 @@
 package cz.cyberrange.platform.guacamole.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import cz.cyberrange.platform.guacamole.errors.CustomWebClientException;
 import cz.cyberrange.platform.guacamole.errors.JavaApiError;
 import cz.cyberrange.platform.guacamole.errors.PythonApiError;
-import java.io.IOException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.http.codec.json.Jackson2JsonDecoder;
-import org.springframework.http.codec.json.Jackson2JsonEncoder;
+import org.springframework.http.codec.json.JacksonJsonDecoder;
+import org.springframework.http.codec.json.JacksonJsonEncoder;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
@@ -21,13 +19,15 @@ import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.json.JsonMapper;
 
 /** The type Web client config. */
 @Import(ObjectMapperConfiguration.class)
 @Configuration
 public class WebClientConfiguration {
 
-  private final ObjectMapper objectMapper;
+  private final JsonMapper jsonMapper;
 
   @Value("${sandbox-service.uri}")
   private String sandboxServiceUri;
@@ -38,8 +38,8 @@ public class WebClientConfiguration {
   @Value("${elasticsearch-service.uri}")
   private String elasticsearchServiceURI;
 
-  public WebClientConfiguration(ObjectMapper objectMapper) {
-    this.objectMapper = objectMapper;
+  public WebClientConfiguration(JsonMapper jsonMapper) {
+    this.jsonMapper = jsonMapper;
   }
 
   /**
@@ -60,12 +60,12 @@ public class WebClientConfiguration {
             configurer -> {
               configurer
                   .defaultCodecs()
-                  .jackson2JsonEncoder(
-                      new Jackson2JsonEncoder(objectMapper, MediaType.APPLICATION_JSON));
+                  .jacksonJsonEncoder(
+                      new JacksonJsonEncoder(jsonMapper, MediaType.APPLICATION_JSON));
               configurer
                   .defaultCodecs()
-                  .jackson2JsonDecoder(
-                      new Jackson2JsonDecoder(objectMapper, MediaType.APPLICATION_JSON));
+                  .jacksonJsonDecoder(
+                      new JacksonJsonDecoder(jsonMapper, MediaType.APPLICATION_JSON));
             })
         .filters(
             exchangeFilterFunctions -> {
@@ -161,8 +161,8 @@ public class WebClientConfiguration {
       return PythonApiError.of("No specific detail provided.");
     }
     try {
-      return objectMapper.readValue(errorBody, PythonApiError.class);
-    } catch (IOException e) {
+      return jsonMapper.readValue(errorBody, PythonApiError.class);
+    } catch (JacksonException e) {
       return PythonApiError.of("Could not obtain error detail. Error body is: " + errorBody);
     }
   }
@@ -191,8 +191,8 @@ public class WebClientConfiguration {
       return JavaApiError.of("No specific message provided.");
     }
     try {
-      return objectMapper.readValue(errorBody, JavaApiError.class);
-    } catch (IOException e) {
+      return jsonMapper.readValue(errorBody, JavaApiError.class);
+    } catch (JacksonException e) {
       return JavaApiError.of("Could not obtain error message. Error body is: " + errorBody);
     }
   }

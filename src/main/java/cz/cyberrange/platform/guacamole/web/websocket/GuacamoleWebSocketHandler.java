@@ -22,7 +22,7 @@ import org.apache.guacamole.net.GuacamoleTunnel;
 import org.apache.guacamole.protocol.FilteredGuacamoleWriter;
 import org.apache.guacamole.protocol.GuacamoleInstruction;
 import org.apache.guacamole.protocol.GuacamoleStatus;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.socket.CloseStatus;

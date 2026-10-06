@@ -23,7 +23,7 @@ jobs:
       OSS_INDEX_USER: ${{ secrets.OSS_INDEX_USER }}
       OSS_INDEX_TOKEN: ${{ secrets.OSS_INDEX_TOKEN }}
     with:
-      JAVA_VERSION: "21"
+      JAVA_VERSION: "25"
       MAVEN_CLI_OPTS: ""
       IMAGE_NAME: "guacamole"
       VERSION_PATH: "pom.xml"
