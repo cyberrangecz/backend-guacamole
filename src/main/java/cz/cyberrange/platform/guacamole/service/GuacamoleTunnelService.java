@@ -98,6 +98,11 @@ public class GuacamoleTunnelService {
 
     VmConnectionDataDto data = sandboxCommunicationService.getConnectionData(sandboxId, nodeName);
 
+    if (data == null) {
+      throw new GuacamoleResourceNotFoundException(
+          "No connection data returned for node '%s'".formatted(nodeName));
+    }
+
     Optional<ProtocolDto> protocol = findProtocol(data.getProtocols(), isGui);
 
     if (protocol.isEmpty()) {
@@ -108,6 +113,11 @@ public class GuacamoleTunnelService {
 
     ProtocolDto selectedProtocol = protocol.get();
     GuacamoleProtocol protocolType = selectedProtocol.getName();
+
+    if (selectedProtocol.getPort() == null) {
+      throw new GuacamoleException(
+          "Protocol '%s' of node '%s' has no port".formatted(protocolType, nodeName));
+    }
 
     GuacamoleConfiguration config = new GuacamoleConfiguration();
     config.setProtocol(protocolType.getProtocolName());

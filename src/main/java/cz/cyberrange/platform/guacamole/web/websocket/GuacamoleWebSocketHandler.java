@@ -184,15 +184,11 @@ public class GuacamoleWebSocketHandler extends TextWebSocketHandler implements S
   public void afterConnectionEstablished(@NonNull WebSocketSession session)
       throws GuacamoleException {
 
-    // Create lock for session synchronization
-    sessionLocks.put(session.getId(), new Object());
-
     Authentication authentication =
         (Authentication) session.getAttributes().get(StringConstants.AUTHENTICATION_ATTRIBUTE_KEY);
 
     if (authentication == null) {
       log.error("No authentication found in session attributes");
-      sessionLocks.remove(session.getId());
       closeConnection(session, GuacamoleStatus.CLIENT_UNAUTHORIZED);
       return;
     }
@@ -218,6 +214,10 @@ public class GuacamoleWebSocketHandler extends TextWebSocketHandler implements S
 
     String nodeName = getOrThrow(params, PARAM_NODE_NAME);
     boolean withGui = params.getOrDefault(PARAM_WITH_GUI, "false").equalsIgnoreCase("true");
+
+    // Create lock for session synchronization
+    sessionLocks.put(session.getId(), new Object());
+
     log.info(
         "Creating Guacamole tunnel - User: {}, Sandbox: {}, Node: {}",
         authentication.getName(),

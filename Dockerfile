@@ -1,7 +1,7 @@
 ARG PROJECT_ARTIFACT_ID=guacamole-service
 
 ############ BUILD STAGE ############
-FROM maven:3.9.11-eclipse-temurin-25-alpine AS build
+FROM maven:3.10.0-eclipse-temurin-25-alpine AS build
 WORKDIR /app
 
 ARG PROJECT_ARTIFACT_ID

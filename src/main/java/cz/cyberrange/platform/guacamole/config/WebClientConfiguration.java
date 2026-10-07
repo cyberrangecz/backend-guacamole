@@ -16,7 +16,6 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
-import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 import tools.jackson.core.JacksonException;
@@ -34,9 +33,6 @@ public class WebClientConfiguration {
 
   @Value("${user-and-group-server.uri}")
   private String userAndGroupURI;
-
-  @Value("${elasticsearch-service.uri}")
-  private String elasticsearchServiceURI;
 
   public WebClientConfiguration(JsonMapper jsonMapper) {
     this.jsonMapper = jsonMapper;
@@ -97,32 +93,6 @@ public class WebClientConfiguration {
         .build();
   }
 
-  /**
-   * Elasticsearch service web client.
-   *
-   * @return the web client
-   */
-  @Bean
-  public WebClient elasticsearchServiceWebClient() {
-    return WebClient.builder()
-        .baseUrl(elasticsearchServiceURI)
-        .defaultHeaders(
-            headers -> {
-              headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
-              headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-            })
-        .filters(
-            exchangeFilterFunctions -> {
-              exchangeFilterFunctions.add(addSecurityHeader());
-              exchangeFilterFunctions.add(javaMicroserviceExceptionHandlingFunction());
-            })
-        .exchangeStrategies(
-            ExchangeStrategies.builder()
-                .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(16 * 1024 * 1024))
-                .build())
-        .build();
-  }
-
   private ExchangeFilterFunction addSecurityHeader() {
     return (request, next) -> {
       JwtAuthenticationToken jwtAuthentication =
@@ -143,6 +113,7 @@ public class WebClientConfiguration {
               || clientResponse.statusCode().is5xxServerError()) {
             return clientResponse
                 .bodyToMono(String.class)
+                .defaultIfEmpty("")
                 .flatMap(
                     errorBody -> {
                       PythonApiError pythonApiError = obtainSuitablePythonApiError(errorBody);
@@ -174,6 +145,7 @@ public class WebClientConfiguration {
               || clientResponse.statusCode().is5xxServerError()) {
             return clientResponse
                 .bodyToMono(String.class)
+                .defaultIfEmpty("")
                 .flatMap(
                     errorBody -> {
                       JavaApiError javaApiError = obtainSuitableJavaApiError(errorBody);
