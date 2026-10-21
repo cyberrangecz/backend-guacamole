@@ -17,6 +17,8 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.util.DefaultUriBuilderFactory;
+import org.springframework.web.util.DefaultUriBuilderFactory.EncodingMode;
 import reactor.core.publisher.Mono;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.json.JsonMapper;
@@ -46,7 +48,7 @@ public class WebClientConfiguration {
   @Bean
   public WebClient sandboxServiceWebClient() {
     return WebClient.builder()
-        .baseUrl(sandboxServiceUri)
+        .uriBuilderFactory(strictlyEncodingUriBuilderFactory(sandboxServiceUri))
         .defaultHeaders(
             headers -> {
               headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
@@ -91,6 +93,16 @@ public class WebClientConfiguration {
               exchangeFilterFunctions.add(javaMicroserviceExceptionHandlingFunction());
             })
         .build();
+  }
+
+  /**
+   * Creates a URI builder factory that encodes every URI template variable strictly, so reserved
+   * characters inside a variable stay within its path segment.
+   */
+  private DefaultUriBuilderFactory strictlyEncodingUriBuilderFactory(String baseUrl) {
+    DefaultUriBuilderFactory uriBuilderFactory = new DefaultUriBuilderFactory(baseUrl);
+    uriBuilderFactory.setEncodingMode(EncodingMode.TEMPLATE_AND_VALUES);
+    return uriBuilderFactory;
   }
 
   private ExchangeFilterFunction addSecurityHeader() {
