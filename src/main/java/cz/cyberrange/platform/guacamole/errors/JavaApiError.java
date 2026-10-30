@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.beans.ConstructorProperties;
+import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -20,8 +21,10 @@ public class JavaApiError extends ApiSubError {
 
   @Getter
   @Setter
-  @Schema(description = "The time when the exception occurred", example = "1574062900")
-  private long timestamp;
+  @Schema(
+      description = "The time when the exception occurred, as a UTC instant",
+      example = "2026-10-06T11:34:04.071Z")
+  private Instant timestamp;
 
   @Setter
   @Schema(
@@ -61,7 +64,7 @@ public class JavaApiError extends ApiSubError {
       HttpStatus httpStatus, String message, List<String> errors, String path) {
     JavaApiError apiError = new JavaApiError(message);
     apiError.setStatus(httpStatus);
-    apiError.setTimestamp(System.currentTimeMillis());
+    apiError.setTimestamp(Instant.now());
     apiError.setErrors(errors);
     apiError.setPath(path);
     return apiError;
@@ -70,7 +73,7 @@ public class JavaApiError extends ApiSubError {
   public static JavaApiError of(HttpStatus httpStatus, String message, String error, String path) {
     JavaApiError apiError = new JavaApiError(message);
     apiError.setStatus(httpStatus);
-    apiError.setTimestamp(System.currentTimeMillis());
+    apiError.setTimestamp(Instant.now());
     apiError.setError(error);
     apiError.setPath(path);
     return apiError;
@@ -123,7 +126,7 @@ public class JavaApiError extends ApiSubError {
 
   @Override
   public int hashCode() {
-    return Objects.hash(timestamp, getStatus(), message, errors, path);
+    return Objects.hash(timestamp, getStatus(), getMessage(), errors, path);
   }
 
   @Override
@@ -132,7 +135,7 @@ public class JavaApiError extends ApiSubError {
     if (obj == null) return false;
     if (!(obj instanceof JavaApiError other)) return false;
     return Objects.equals(errors, other.getErrors())
-        && Objects.equals(message, other.getMessage())
+        && Objects.equals(getMessage(), other.getMessage())
         && Objects.equals(path, other.getPath())
         && Objects.equals(getStatus(), other.getStatus())
         && Objects.equals(timestamp, other.getTimestamp());

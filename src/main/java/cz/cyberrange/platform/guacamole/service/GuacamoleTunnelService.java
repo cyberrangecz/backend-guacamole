@@ -15,8 +15,8 @@ import org.apache.guacamole.net.InetGuacamoleSocket;
 import org.apache.guacamole.net.SimpleGuacamoleTunnel;
 import org.apache.guacamole.protocol.ConfiguredGuacamoleSocket;
 import org.apache.guacamole.protocol.GuacamoleConfiguration;
-import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
 
 /** This service contains utilities for the management of Guacamole tunnels. */
@@ -98,6 +98,11 @@ public class GuacamoleTunnelService {
 
     VmConnectionDataDto data = sandboxCommunicationService.getConnectionData(sandboxId, nodeName);
 
+    if (data == null) {
+      throw new GuacamoleResourceNotFoundException(
+          "No connection data returned for node '%s'".formatted(nodeName));
+    }
+
     Optional<ProtocolDto> protocol = findProtocol(data.getProtocols(), isGui);
 
     if (protocol.isEmpty()) {
@@ -108,6 +113,11 @@ public class GuacamoleTunnelService {
 
     ProtocolDto selectedProtocol = protocol.get();
     GuacamoleProtocol protocolType = selectedProtocol.getName();
+
+    if (selectedProtocol.getPort() == null) {
+      throw new GuacamoleException(
+          "Protocol '%s' of node '%s' has no port".formatted(protocolType, nodeName));
+    }
 
     GuacamoleConfiguration config = new GuacamoleConfiguration();
     config.setProtocol(protocolType.getProtocolName());

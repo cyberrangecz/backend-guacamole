@@ -1,33 +1,34 @@
 package cz.cyberrange.platform.guacamole.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import cz.cyberrange.platform.guacamole.errors.CustomWebClientException;
 import cz.cyberrange.platform.guacamole.errors.JavaApiError;
 import cz.cyberrange.platform.guacamole.errors.PythonApiError;
-import java.io.IOException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.http.codec.json.Jackson2JsonDecoder;
-import org.springframework.http.codec.json.Jackson2JsonEncoder;
+import org.springframework.http.codec.json.JacksonJsonDecoder;
+import org.springframework.http.codec.json.JacksonJsonEncoder;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
-import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.util.DefaultUriBuilderFactory;
+import org.springframework.web.util.DefaultUriBuilderFactory.EncodingMode;
 import reactor.core.publisher.Mono;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.json.JsonMapper;
 
 /** The type Web client config. */
 @Import(ObjectMapperConfiguration.class)
 @Configuration
 public class WebClientConfiguration {
 
-  private final ObjectMapper objectMapper;
+  private final JsonMapper jsonMapper;
 
   @Value("${sandbox-service.uri}")
   private String sandboxServiceUri;
@@ -35,11 +36,8 @@ public class WebClientConfiguration {
   @Value("${user-and-group-server.uri}")
   private String userAndGroupURI;
 
-  @Value("${elasticsearch-service.uri}")
-  private String elasticsearchServiceURI;
-
-  public WebClientConfiguration(ObjectMapper objectMapper) {
-    this.objectMapper = objectMapper;
+  public WebClientConfiguration(JsonMapper jsonMapper) {
+    this.jsonMapper = jsonMapper;
   }
 
   /**
@@ -50,7 +48,7 @@ public class WebClientConfiguration {
   @Bean
   public WebClient sandboxServiceWebClient() {
     return WebClient.builder()
-        .baseUrl(sandboxServiceUri)
+        .uriBuilderFactory(strictlyEncodingUriBuilderFactory(sandboxServiceUri))
         .defaultHeaders(
             headers -> {
               headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
@@ -60,12 +58,12 @@ public class WebClientConfiguration {
             configurer -> {
               configurer
                   .defaultCodecs()
-                  .jackson2JsonEncoder(
-                      new Jackson2JsonEncoder(objectMapper, MediaType.APPLICATION_JSON));
+                  .jacksonJsonEncoder(
+                      new JacksonJsonEncoder(jsonMapper, MediaType.APPLICATION_JSON));
               configurer
                   .defaultCodecs()
-                  .jackson2JsonDecoder(
-                      new Jackson2JsonDecoder(objectMapper, MediaType.APPLICATION_JSON));
+                  .jacksonJsonDecoder(
+                      new JacksonJsonDecoder(jsonMapper, MediaType.APPLICATION_JSON));
             })
         .filters(
             exchangeFilterFunctions -> {
@@ -98,29 +96,13 @@ public class WebClientConfiguration {
   }
 
   /**
-   * Elasticsearch service web client.
-   *
-   * @return the web client
+   * Creates a URI builder factory that encodes every URI template variable strictly, so reserved
+   * characters inside a variable stay within its path segment.
    */
-  @Bean
-  public WebClient elasticsearchServiceWebClient() {
-    return WebClient.builder()
-        .baseUrl(elasticsearchServiceURI)
-        .defaultHeaders(
-            headers -> {
-              headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
-              headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-            })
-        .filters(
-            exchangeFilterFunctions -> {
-              exchangeFilterFunctions.add(addSecurityHeader());
-              exchangeFilterFunctions.add(javaMicroserviceExceptionHandlingFunction());
-            })
-        .exchangeStrategies(
-            ExchangeStrategies.builder()
-                .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(16 * 1024 * 1024))
-                .build())
-        .build();
+  private DefaultUriBuilderFactory strictlyEncodingUriBuilderFactory(String baseUrl) {
+    DefaultUriBuilderFactory uriBuilderFactory = new DefaultUriBuilderFactory(baseUrl);
+    uriBuilderFactory.setEncodingMode(EncodingMode.TEMPLATE_AND_VALUES);
+    return uriBuilderFactory;
   }
 
   private ExchangeFilterFunction addSecurityHeader() {
@@ -143,6 +125,7 @@ public class WebClientConfiguration {
               || clientResponse.statusCode().is5xxServerError()) {
             return clientResponse
                 .bodyToMono(String.class)
+                .defaultIfEmpty("")
                 .flatMap(
                     errorBody -> {
                       PythonApiError pythonApiError = obtainSuitablePythonApiError(errorBody);
@@ -161,8 +144,8 @@ public class WebClientConfiguration {
       return PythonApiError.of("No specific detail provided.");
     }
     try {
-      return objectMapper.readValue(errorBody, PythonApiError.class);
-    } catch (IOException e) {
+      return jsonMapper.readValue(errorBody, PythonApiError.class);
+    } catch (JacksonException e) {
       return PythonApiError.of("Could not obtain error detail. Error body is: " + errorBody);
     }
   }
@@ -174,6 +157,7 @@ public class WebClientConfiguration {
               || clientResponse.statusCode().is5xxServerError()) {
             return clientResponse
                 .bodyToMono(String.class)
+                .defaultIfEmpty("")
                 .flatMap(
                     errorBody -> {
                       JavaApiError javaApiError = obtainSuitableJavaApiError(errorBody);
@@ -191,8 +175,8 @@ public class WebClientConfiguration {
       return JavaApiError.of("No specific message provided.");
     }
     try {
-      return objectMapper.readValue(errorBody, JavaApiError.class);
-    } catch (IOException e) {
+      return jsonMapper.readValue(errorBody, JavaApiError.class);
+    } catch (JacksonException e) {
       return JavaApiError.of("Could not obtain error message. Error body is: " + errorBody);
     }
   }

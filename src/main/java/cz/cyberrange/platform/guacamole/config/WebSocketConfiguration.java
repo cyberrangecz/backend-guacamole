@@ -4,9 +4,9 @@ import cz.cyberrange.platform.commons.security.config.WebsocketTokenValidationIn
 import cz.cyberrange.platform.commons.security.impl.UserInfoAuthenticationProvider;
 import cz.cyberrange.platform.guacamole.service.GuacamoleTunnelService;
 import cz.cyberrange.platform.guacamole.web.websocket.GuacamoleWebSocketHandler;
+import org.jspecify.annotations.NonNull;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.lang.NonNull;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.config.annotation.WebSocketConfigurer;

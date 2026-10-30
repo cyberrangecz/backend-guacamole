@@ -1,7 +1,7 @@
 ARG PROJECT_ARTIFACT_ID=guacamole-service
 
 ############ BUILD STAGE ############
-FROM maven:3.9.4-eclipse-temurin-21-alpine AS build
+FROM maven:3.10.0-eclipse-temurin-25-alpine AS build
 WORKDIR /app
 
 ARG PROJECT_ARTIFACT_ID
@@ -16,7 +16,7 @@ RUN mvn clean install -DskipTests -DskipChecks=true $MAVEN_CLI_OPTS && \
     cp /app/target/$PROJECT_ARTIFACT_ID-*.jar /app/$PROJECT_ARTIFACT_ID.jar
 
 ############ RUNNABLE STAGE ############
-FROM eclipse-temurin:21-jre-noble AS runnable
+FROM eclipse-temurin:25-jre-noble AS runnable
 
 WORKDIR /app
 

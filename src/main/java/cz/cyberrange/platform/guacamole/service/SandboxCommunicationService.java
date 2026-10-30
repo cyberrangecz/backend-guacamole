@@ -9,7 +9,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 @Service
 public class SandboxCommunicationService {
 
-  private static final String SANDBOX_API = "/sandboxes/%s/topology/%s";
+  private static final String SANDBOX_API = "/sandboxes/{sandboxId}/topology/{nodeName}";
 
   private final WebClient sandboxServiceWebClient;
 
@@ -23,10 +23,6 @@ public class SandboxCommunicationService {
     this.sandboxServiceWebClient = sandboxWebClient;
   }
 
-  private static String getSadndboxNodeEndpoint(String sandboxId, String nodeName) {
-    return String.format(SANDBOX_API, sandboxId, nodeName);
-  }
-
   /**
    * Gets connection data of the specified node inside sandbox.
    *
@@ -37,7 +33,7 @@ public class SandboxCommunicationService {
   public VmConnectionDataDto getConnectionData(String sandboxId, String nodeName) {
     return sandboxServiceWebClient
         .get()
-        .uri(builder -> builder.path(getSadndboxNodeEndpoint(sandboxId, nodeName)).build())
+        .uri(SANDBOX_API, sandboxId, nodeName)
         .retrieve()
         .bodyToMono(VmConnectionDataDto.class)
         .block();
